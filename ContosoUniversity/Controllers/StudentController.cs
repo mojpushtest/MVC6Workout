@@ -98,7 +98,7 @@ namespace ContosoUniversity.Controllers
             }
             catch (DataException)
             {
-                ModelState.AddModelError("DataException", "Saving changes failed");
+                ModelState.AddModelError("DataException", "Unable to save changes");
             }
             return View(student);
         }
