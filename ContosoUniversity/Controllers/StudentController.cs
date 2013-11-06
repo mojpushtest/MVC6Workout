@@ -47,15 +47,21 @@ namespace ContosoUniversity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include="ID,LastName,FirstName,EnrollmentDate")] Student student)
+        public async Task<ActionResult> Create([Bind(Include = "LastName,FirstName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
+            try
             {
-                db.Students.Add(student);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    db.Students.Add(student);
+                    await db.SaveChangesAsync();
+                    return RedirectToAction("Index");
+                }
             }
-
+            catch (DataException)
+            {
+                ModelState.AddModelError("Exception", "Unable to save changes");
+            }
             return View(student);
         }
 
@@ -79,13 +85,20 @@ namespace ContosoUniversity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include="ID,LastName,FirstName,EnrollmentDate")] Student student)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,LastName,FirstName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
+            try
             {
-                db.Entry(student).State = System.Data.Entity.EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    db.Entry(student).State = System.Data.Entity.EntityState.Modified;
+                    await db.SaveChangesAsync();
+                    return RedirectToAction("Index");
+                }
+            }
+            catch (DataException)
+            {
+                ModelState.AddModelError("DataException", "Saving changes failed");
             }
             return View(student);
         }
@@ -110,18 +123,15 @@ namespace ContosoUniversity.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Student student = await db.Students.FindAsync(id);
-            db.Students.Remove(student);
+            Student student = new Student { ID = id };
+            db.Entry(student).State = System.Data.Entity.EntityState.Deleted;
             await db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
+            db.Dispose();
             base.Dispose(disposing);
         }
     }

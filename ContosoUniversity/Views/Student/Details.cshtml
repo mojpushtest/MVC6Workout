@@ -34,6 +34,29 @@
             @Html.DisplayFor(model => model.EnrollmentDate)
         </dd>
 
+        <dt>
+            Enrollments
+        </dt>
+        <dd>
+            <table class="table table-responsive table-striped" >
+                <thead>
+                    <tr>
+                        <th>Course Title</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Enrollments)
+                    {
+                        <tr>
+                            <td>@item.Course.Title</td>
+                            <td>@item.Grade</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </dd>
+
     </dl>
 </div>
 <p>
