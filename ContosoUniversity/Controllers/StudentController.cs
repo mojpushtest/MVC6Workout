@@ -8,7 +8,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using ContosoUniversity.Models;
-
+using PagedList;
 namespace ContosoUniversity.Controllers
 {
     public class StudentController : Controller
@@ -16,9 +16,54 @@ namespace ContosoUniversity.Controllers
         private AppContext db = new AppContext();
 
         // GET: /Student/
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
-            return View(await db.Students.ToListAsync());
+            ViewBag.CurrentSort = sortOrder;
+            ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "Name_desc" : "";
+            ViewBag.DateSortParm = sortOrder == "Date" ? "Date_desc" : "Date";
+
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewBag.CurrentFilter = searchString;
+
+            var students =  db.Students.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                students = students.Where(
+                    m => m.FirstName.ToUpper().Contains(searchString.ToUpper()) ||
+                    m.LastName.ToUpper().Contains(searchString.ToUpper()));
+            }
+
+            switch (sortOrder)
+            {
+                case "Name_desc":
+                    students = students.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    students = students.OrderBy(s => s.EnrollmentDate);
+                    break;
+                case "Date_desc":
+                    students = students.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    students = students.OrderBy(s => s.LastName);
+                    break;
+            }
+
+            int pageSize = 3;
+            int pageNumber = (page ?? 1);
+
+            var pagedStudents = await  Task.Run<IPagedList<Student>>(delegate { return students.ToPagedList(pageNumber, pageSize); });
+
+            return View(pagedStudents);
         }
 
         // GET: /Student/Details/5
